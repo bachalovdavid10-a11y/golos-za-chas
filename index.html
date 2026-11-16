@@ -152,7 +152,25 @@ input[type=text] { width: 100%; padding: 12px 14px; border-radius: 10px; border:
       </div>
     </aside>
   </section>
+  <!-- БЛОК ВОПРОСОВ -->
+  <section class="card" style="margin-top: 20px;">
+    <h2>Задать вопрос Давиду</h2>
+    <p style="color: var(--muted); font-size: 14px; margin-bottom: 16px;">Хочешь спросить про учебу, Гарвард или мой путь? Пиши сюда. Я отвечу на самые интересные вопросы в блоге.</p>
+    
+    <form id="askForm" style="display: grid; gap: 12px;">
+      <input id="askName" type="text" placeholder="Твое имя (или Аноним)" maxlength="24" required>
+      <textarea id="askText" placeholder="Твой вопрос..." maxlength="300" required style="width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; min-height: 100px; resize: vertical;"></textarea>
+      <button class="btn" type="submit" id="askBtn">Отправить вопрос</button>
+    </form>
+  </section>
 
+  <!-- СПИСОК ВОПРОСОВ И ОТВЕТОВ -->
+  <section class="card" style="margin-top: 20px;">
+    <h2>Ответы на вопросы</h2>
+    <ul class="list" id="qaList" style="margin-top: 16px;">
+      <!-- Сюда будут падать вопросы из базы -->
+    </ul>
+  </section>
   <section class="grid3">
     <div class="card">
       <h2>Что народ хочет, чтобы я учил</h2>
@@ -176,7 +194,7 @@ input[type=text] { width: 100%; padding: 12px 14px; border-radius: 10px; border:
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getFirestore, collection, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+import { getFirestore, collection, doc, onSnapshot, setDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCYbDlvbcgkB8W21G1KCMQ-Ox8sSA7fKs5pQ",
@@ -189,6 +207,76 @@ input[type=text] { width: 100%; padding: 12px 14px; border-radius: 10px; border:
 
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
+    // === ЛОГИКА ДЛЯ ВОПРОСОВ ===
+  const askForm = document.getElementById('askForm');
+  const askBtn = document.getElementById('askBtn');
+  const qaList = document.getElementById('qaList');
+
+  // Отправка вопроса
+  askForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const name = document.getElementById('askName').value.trim() || 'Аноним';
+    const text = document.getElementById('askText').value.trim();
+    
+    if (!text) return;
+
+    askBtn.disabled = true;
+    askBtn.textContent = 'Отправка...';
+
+    try {
+      await addDoc(collection(db, 'questions'), {
+        name: name,
+        text: text,
+        answer: null, 
+        createdAt: Date.now(),
+        approved: true 
+      });
+      
+      toast('Вопрос отправлен! Спасибо.');
+      document.getElementById('askText').value = '';
+      document.getElementById('askName').value = '';
+    } catch (error) {
+      console.error(error);
+      toast('Ошибка при отправке. Попробуй позже.');
+    } finally {
+      askBtn.disabled = false;
+      askBtn.textContent = 'Отправить вопрос';
+    }
+  });
+
+  // Чтение вопросов из базы в реальном времени
+  onSnapshot(collection(db, 'questions'), (snap) => {
+    qaList.innerHTML = '';
+    const qs = snap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a, b) => b.createdAt - a.createdAt);
+
+    if (qs.length === 0) {
+      qaList.innerHTML = '<p class="empty">Пока нет вопросов. Будь первым!</p>';
+      return;
+    }
+
+    qs.forEach(q => {
+      if (q.approved === false) return; 
+
+      const li = document.createElement('li');
+      li.style.padding = '16px';
+      li.style.borderBottom = '1px solid var(--line)';
+      
+      let answerHTML = '';
+      if (q.answer) {
+        answerHTML = `<div style="margin-top: 12px; padding-left: 12px; border-left: 3px solid var(--crimson); color: var(--ink);">
+          <strong style="font-size: 12px; text-transform: uppercase; color: var(--crimson);">Ответ Давида:</strong>
+          <p style="margin: 4px 0 0 0;">${q.answer}</p>
+        </div>`;
+      }
+
+      li.innerHTML = `
+        <div style="font-weight: 600; color: var(--accent-text); margin-bottom: 4px;">${q.name} спрашивает:</div>
+        <div style="font-size: 15px; margin-bottom: 8px;">${q.text}</div>
+        ${answerHTML}
+      `;
+      qaList.appendChild(li);
+    });
+  });
 
   var $ = function(s){ return document.querySelector(s); };
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
