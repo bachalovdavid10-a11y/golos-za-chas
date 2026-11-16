@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Голос за час</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Unbounded:wght@500;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&display=swap">
+<style>
+:root {
+  --bg: #F6F3F4; --surface: #FFFFFF; --ink: #1A1418; --muted: #6A5E65; --line: #E3DADF; --chip: #EEE8EB;
+  --crimson: #A51C30; --on-crimson: #FFFFFF; --accent-text: #A51C30; --good: #1F7A4D;
+  --f-display: 'Unbounded', 'Arial Black', system-ui, sans-serif;
+  --f-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --f-mono: 'JetBrains Mono', monospace;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #131013; --surface: #1D171B; --ink: #F4EDF0; --muted: #AA9CA4; --line: #34292F; --chip: #2A2227;
+    --crimson: #C72A42; --on-crimson: #FFFFFF; --accent-text: #FF8091; --good: #5ED19A;
+  }
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 16px; line-height: 1.5;
+  padding: 20px max(16px, env(safe-area-inset-left)) 56px max(16px, env(safe-area-inset-right));
+}
+.wrap { max-width: 1080px; margin: 0 auto; display: grid; gap: 20px; }
+.top { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--f-display); font-weight: 700; font-size: 15px; }
+.mark { width: 32px; height: 32px; border-radius: 8px; background: var(--crimson); color: var(--on-crimson); display: grid; place-items: center; font-size: 16px; }
+.pill { display: inline-flex; align-items: center; gap: 8px; padding: 6px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.pill i { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.pill.live i { background: var(--good); animation: pulse 1.6s infinite; }
+.pill.live { color: var(--ink); }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: .35; } }
+.hero { display: grid; gap: 20px; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); align-items: start; }
+.hero-main, .hero-side { display: grid; gap: 16px; min-width: 0; }
+.eyebrow { margin: 0; font-family: var(--f-mono); font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: var(--accent-text); }
+h1 { margin: 0; font-family: var(--f-display); font-weight: 700; font-size: clamp(28px, 6vw, 46px); line-height: 1.1; }
+.lead { margin: 0; color: var(--muted); max-width: 60ch; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 16px; padding: 20px; min-width: 0; }
+.card h2 { margin: 0 0 14px; font-family: var(--f-display); font-weight: 500; font-size: 14px; }
+.count { font-family: var(--f-display); font-weight: 700; font-size: clamp(64px, 17vw, 128px); line-height: 1; font-variant-numeric: tabular-nums; }
+.count-label { color: var(--muted); margin-top: 6px; }
+.trio { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--line); }
+.trio b { display: block; font-family: var(--f-mono); font-size: 22px; font-variant-numeric: tabular-nums; }
+.trio span { font-size: 12px; color: var(--muted); }
+.vote { display: grid; gap: 14px; }
+.vote label, .field-label { font-size: 13px; font-weight: 600; }
+input[type=text] { width: 100%; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); font: inherit; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip { padding: 8px 13px; border-radius: 999px; border: 1px solid var(--line); background: var(--chip); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
+.chip[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.btn { width: 100%; padding: 16px 18px; border: 0; border-radius: 12px; background: var(--crimson); color: var(--on-crimson); font-family: var(--f-display); font-weight: 700; font-size: 17px; cursor: pointer; transition: transform .12s ease; }
+.btn:active:not(:disabled) { transform: scale(.98); }
+.btn:disabled { opacity: .5; cursor: not-allowed; }
+.btn.ghost { background: var(--chip); color: var(--ink); font-family: var(--f-body); font-weight: 600; font-size: 14px; padding: 11px 14px; width: auto; }
+:focus-visible { outline: 2px solid var(--accent-text); outline-offset: 2px; }
+.hint { margin: 0; font-size: 13px; color: var(--muted); min-height: 1.4em; }
+.ring-card { display: grid; gap: 14px; justify-items: center; text-align: center; }
+.ring { width: min(220px, 100%); height: auto; }
+.ring .bg { fill: none; stroke: var(--line); stroke-width: 12; }
+.ring .fg { fill: none; stroke: var(--crimson); stroke-width: 12; stroke-linecap: round; stroke-dasharray: 376.99; stroke-dashoffset: 376.99; transform: rotate(-90deg); transform-origin: 70px 70px; transition: stroke-dashoffset .8s ease; }
+.ring text { fill: var(--ink); font-family: var(--f-display); font-weight: 700; text-anchor: middle; }
+.ring .sub { font-family: var(--f-mono); font-weight: 500; fill: var(--muted); }
+.level { font-family: var(--f-display); font-weight: 500; font-size: 16px; }
+.next { margin: 0; font-size: 13px; color: var(--muted); }
+.meter { width: 100%; text-align: left; }
+.meter-row { display: flex; justify-content: space-between; gap: 8px; font-size: 13px; margin-bottom: 6px; }
+.meter-row b { font-family: var(--f-mono); }
+.bar { height: 8px; border-radius: 999px; background: var(--line); overflow: hidden; }
+.bar > i { display: block; height: 100%; width: 0; background: var(--crimson); border-radius: 999px; transition: width .6s ease; }
+.tip p { margin: 0 0 12px; }
+.grid3 { display: grid; gap: 20px; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); }
+.list { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.row { display: grid; gap: 6px; }
+.row-head { display: flex; justify-content: space-between; gap: 8px; font-size: 14px; }
+.row-head span:last-child { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.leader { display: grid; grid-template-columns: 28px minmax(0, 1fr) auto; gap: 10px; align-items: center; font-size: 14px; }
+.leader .rank { font-family: var(--f-mono); color: var(--muted); }
+.leader .nm { overflow-wrap: anywhere; }
+.leader .n { font-family: var(--f-mono); }
+.feed li { display: grid; gap: 2px; font-size: 14px; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.feed li:last-child { border-bottom: 0; padding-bottom: 0; }
+.feed time { font-family: var(--f-mono); font-size: 12px; color: var(--muted); }
+.feed .nm { font-weight: 600; overflow-wrap: anywhere; }
+.empty { color: var(--muted); font-size: 14px; margin: 0; }
+.foot { font-size: 12px; color: var(--muted); text-align: center; margin: 0; }
+@media (max-width: 860px) { .hero { grid-template-columns: minmax(0, 1fr); } }
+</style>
+</head>
+<body>
+
+<div id="toast" style="position:fixed;left:50%;transform:translateX(-50%);bottom:20px;padding:12px 16px;border-radius:12px;background:var(--ink);color:var(--bg);font-size:14px;z-index:60;opacity:0;pointer-events:none;transition:opacity .2s ease;"></div>
+<canvas id="fx" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:50"></canvas>
+
+<main class="wrap">
+  <header class="top">
+    <div class="brand"><span class="mark">H</span><span>Голос за час</span></div>
+    <div class="pill" id="status"><i></i><span id="statusText">Подключаюсь…</span></div>
+  </header>
+
+  <section class="hero">
+    <div class="hero-main">
+      <p class="eyebrow">Проект «Гарвард»</p>
+      <h1>1 голос — 1 час учёбы</h1>
+      <p class="lead">Выбери предмет и нажми кнопку. Этот час я отучу. Счётчик обновляется у всех сразу, страницу перезагружать не нужно.</p>
+
+      <div class="card">
+        <div class="count" id="queue">0</div>
+        <div class="count-label" id="queueLabel">часов в очереди на учёбу</div>
+        <div class="trio">
+          <div><b id="sTotal">0</b><span>голосов всего</span></div>
+          <div><b id="sDone">0</b><span>уже отучено</span></div>
+          <div><b id="sPeople">0</b><span>голосующих</span></div>
+        </div>
+      </div>
+
+      <form class="card vote" id="voteForm">
+        <div>
+          <label for="nick">Твоё имя</label>
+          <input id="nick" type="text" maxlength="24" placeholder="Например, Аня" autocomplete="nickname">
+        </div>
+        <div>
+          <div class="field-label" id="chipsLabel">Что учить в этот час</div>
+          <div class="chips" id="chips" role="group" aria-labelledby="chipsLabel"></div>
+        </div>
+        <button class="btn" id="voteBtn" type="submit" disabled>Голосую: +1 час</button>
+        <p class="hint" id="voteHint">Подключаюсь к голосованию…</p>
+      </form>
+    </div>
+
+    <aside class="hero-side">
+      <div class="card ring-card">
+        <svg class="ring" viewBox="0 0 140 140" role="img" aria-label="Прогресс к цели">
+          <circle class="bg" cx="70" cy="70" r="60"></circle>
+          <circle class="fg" id="ringFg" cx="70" cy="70" r="60"></circle>
+          <text x="70" y="70" font-size="26" id="ringMain">0</text>
+          <text class="sub" x="70" y="90" font-size="10" id="ringSub">из 1000 ч</text>
+        </svg>
+        <div class="level" id="level">Абитуриент-новичок</div>
+        <p class="next" id="nextLevel"></p>
+        <div class="meter">
+          <div class="meter-row"><span>Шанс на Гарвард (очень научно)</span><b id="chance">1%</b></div>
+          <div class="bar"><i id="chanceBar"></i></div>
+        </div>
+      </div>
+      <div class="card tip">
+        <h2>Совет на этот час</h2>
+        <p id="tipText"></p>
+        <button class="btn ghost" id="tipBtn" type="button">Другой совет</button>
+      </div>
+    </aside>
+  </section>
+
+  <section class="grid3">
+    <div class="card">
+      <h2>Что народ хочет, чтобы я учил</h2>
+      <ul class="list" id="subjects"></ul>
+    </div>
+    <div class="card">
+      <h2>Лидеры голосования</h2>
+      <ol class="list" id="leaders"></ol>
+    </div>
+    <div class="card">
+      <h2>Лента голосов</h2>
+      <ul class="list feed" id="feed"></ul>
+    </div>
+  </section>
+
+  <p class="foot">Один человек может отдать до 24 голосов в день. В сутках больше часов нет.</p>
+</main>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+  import { getFirestore, collection, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCYbDlvbcgkB8W21G1KCMQ-Ox8sSA7fKs5pQ",
+    authDomain: "golos-za-chas.firebaseapp.com",
+    projectId: "golos-za-chas",
+    storageBucket: "golos-za-chas.firebasestorage.app",
+    messagingSenderId: "494580454510",
+    appId: "1:494580454510:web:0e28c09fa13cac4a3827f"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  var $ = function(s){ return document.querySelector(s); };
+  var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var SUBJECTS = [
+    {id:'math', name:'Математика'}, {id:'phys', name:'Физика'}, {id:'eng', name:'Английский'},
+    {id:'sat', name:'SAT'}, {id:'essay', name:'Эссе'}, {id:'code', name:'Программирование'},
+    {id:'chem', name:'Химия'}, {id:'hist', name:'История'}
+  ];
+  var SUBJ = {}; SUBJECTS.forEach(function(s){ SUBJ[s.id] = s.name; });
+  var LEVELS = [
+    {h:0, t:'Абитуриент-новичок'}, {h:5, t:'Зубрилка'}, {h:20, t:'Житель библиотеки'},
+    {h:50, t:'Отличник на кофеине'}, {h:100, t:'Почти Кембридж'}, {h:250, t:'Гарвардский кандидат'},
+    {h:500, t:'Студент Гарварда (в мечтах)'}, {h:1000, t:'Легенда Гарвард-Ярда'}
+  ];
+  var TIPS = [
+    'Закрой конспект и перескажи тему вслух. Вспоминать полезнее, чем перечитывать.',
+    'Повторяй с интервалами: сегодня, через три дня, через неделю.',
+    'Объясни тему так, чтобы понял пятиклассник. Где запнулся, там и дыра.',
+    'Решай задачи сам, а не перечитывай чужие решения.',
+    'Телефон в другую комнату. Час без уведомлений стоит двух часов с ними.',
+    'Черновик эссе пиши в первый же день, шлифуй потом.',
+    'Сложное делай сначала, пока голова свежая.',
+    'Спи. Память закрепляется ночью, так что сон тоже учёба.'
+  ];
+
+  function plural(n, f){ var a = Math.abs(n) % 100, b = a % 10; if (a > 10 && a < 20) return f[2]; if (b > 1 && b < 5) return f[1]; if (b === 1) return f[0]; return f[2]; }
+  function dayKey(){ return new Date().toLocaleDateString('sv'); }
+  function num(x, max){ x = Number(x); if (!isFinite(x) || x < 0) return 0; return Math.min(Math.floor(x), max || 1e6); }
+  function clean(s){ return String(s || '').replace(/\s+/g, ' ').trim().slice(0, 24); }
+  function css(v){ return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#A51C30'; }
+
+  var uid = localStorage.getItem('gzc-uid') || 'user_' + Math.random().toString(36).substr(2, 9);
+  localStorage.setItem('gzc-uid', uid);
+  
+  var votes = [], state = {hoursDone:0, goal:1000};
+  var mine = {count:0, subjects:{}, today:{day:'', n:0}};
+  var loaded = false, live = false, dirty = false, flushing = false;
+  var selected = localStorage.getItem('gzc-subject');
+  if (!SUBJ[selected]) selected = 'math';
+  var tipIdx = Math.floor(Math.random() * TIPS.length);
+  var shown = {queue:null};
+
+  function toast(msg){ var t = $('#toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast._t); toast._t = setTimeout(function(){ t.classList.remove('show'); }, 3200); }
+  function countTo(el, to, key){ var from = shown[key]; shown[key] = to; if (from === null || reduce || from === to){ el.textContent = to; return; } var t0 = performance.now(), dur = 500; (function step(now){ var p = Math.min(1, (now - t0) / dur); el.textContent = Math.round(from + (to - from) * (1 - Math.pow(1 - p, 3))); if (p < 1 && shown[key] === to) requestAnimationFrame(step); else el.textContent = to; })(t0); }
+  function ago(ts){ var s = Math.max(0, (Date.now() - ts) / 1000); if (s < 45) return 'только что'; var m = Math.round(s / 60); if (m < 60) return m + ' мин назад'; var h = Math.round(m / 60); if (h < 24) return h + ' ' + plural(h, ['час','часа','часов']) + ' назад'; var d = Math.round(h / 24); return d + ' ' + plural(d, ['день','дня','дней']) + ' назад'; }
+  function confetti(){ if (reduce) return; var c = $('#fx'), x = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight; var cs = [css('--crimson'), css('--ink'), '#E8B93A', '#FFFFFF']; var ps = []; for (var i = 0; i < 46; i++) ps.push({ x: innerWidth / 2 + (Math.random() - .5) * 220, y: innerHeight * .6, vx: (Math.random() - .5) * 9, vy: -6 - Math.random() * 7, s: 5 + Math.random() * 5, r: Math.random() * 6, vr: (Math.random() - .5) * .4, c: cs[Math.random() * cs.length | 0] }); var f = 0; (function step(){ x.clearRect(0, 0, c.width, c.height); ps.forEach(function(p){ p.vy += .35; p.x += p.vx; p.y += p.vy; p.r += p.vr; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 3, p.s, p.s * .6); x.restore(); }); if (++f < 80) requestAnimationFrame(step); else x.clearRect(0, 0, c.width, c.height); })(); }
+
+  function totals(){ var total = 0, subj = {}; SUBJECTS.forEach(function(s){ subj[s.id] = 0; }); votes.forEach(function(v){ total += num(v.count, 100000); var sv = v.subjects || {}; SUBJECTS.forEach(function(s){ subj[s.id] += num(sv[s.id], 100000); }); }); return {total: total, subj: subj}; }
+  
+  function renderStatus(){ var p = $('#status'), t = $('#statusText'); if (!db){ p.classList.remove('live'); t.textContent = 'Нет связи с базой'; return; } if (live){ p.classList.add('live'); t.textContent = 'Live · обновляется само'; } else { p.classList.remove('live'); t.textContent = 'Подключаюсь…'; } }
+  function renderVoteForm(){ var btn = $('#voteBtn'), hint = $('#voteHint'); var left = 24 - (mine.today && mine.today.day === dayKey() ? num(mine.today.n, 1000) : 0); var off = true, msg = ''; if (!db){ msg = 'База данных не подключена.'; } else if (!loaded){ msg = 'Подключаюсь к голосованию…'; } else if (left <= 0){ msg = 'На сегодня голоса закончились. Возвращайся завтра.'; } else { off = false; msg = 'Твоих голосов сегодня осталось: ' + left + '.'; } btn.disabled = off; hint.textContent = msg; }
+  function renderChips(){ var box = $('#chips'); if (!box.children.length){ SUBJECTS.forEach(function(s){ var b = document.createElement('button'); b.type = 'button'; b.className = 'chip'; b.textContent = s.name; b.dataset.id = s.id; b.addEventListener('click', function(){ selected = s.id; localStorage.setItem('gzc-subject', s.id); renderChips(); }); box.appendChild(b); }); } Array.prototype.forEach.call(box.children, function(b){ b.setAttribute('aria-pressed', b.dataset.id === selected ? 'true' : 'false'); }); }
+  function renderStats(){ var T = totals(); var done = Math.min(num(state.hoursDone, 1e6), T.total); var queue = T.total - done; countTo($('#queue'), queue, 'queue'); $('#queueLabel').textContent = plural(queue, ['час','часа','часов']) + ' в очереди на учёбу'; $('#sTotal').textContent = T.total; $('#sDone').textContent = done; $('#sPeople').textContent = votes.filter(function(v){ return num(v.count) > 0; }).length; var goal = Math.max(1, num(state.goal, 100000) || 1000); var frac = Math.min(1, done / goal); $('#ringFg').style.strokeDashoffset = (376.99 * (1 - frac)).toFixed(2); $('#ringMain').textContent = done; $('#ringSub').textContent = 'из ' + goal + ' ч'; var lv = LEVELS[0], nx = null; for (var i = 0; i < LEVELS.length; i++){ if (done >= LEVELS[i].h){ lv = LEVELS[i]; nx = LEVELS[i + 1] || null; } } $('#level').textContent = lv.t; $('#nextLevel').textContent = nx ? ('До уровня «' + nx.t + '»: ' + (nx.h - done) + ' ' + plural(nx.h - done, ['час','часа','часов'])) : 'Максимальный уровень. Пора подавать документы.'; var chance = Math.min(99, 1 + Math.round(frac * 98)); $('#chance').textContent = chance + '%'; $('#chanceBar').style.width = chance + '%'; }
+  function renderSubjects(){ var T = totals(), max = 1; SUBJECTS.forEach(function(s){ if (T.subj[s.id] > max) max = T.subj[s.id]; }); var ul = $('#subjects'); ul.textContent = ''; if (!T.total){ var p = document.createElement('p'); p.className = 'empty'; p.textContent = 'Пока ни одного голоса. Первый голос задаст первый предмет.'; ul.appendChild(p); return; } SUBJECTS.slice().sort(function(a, b){ return T.subj[b.id] - T.subj[a.id]; }).forEach(function(s){ var li = document.createElement('li'); li.className = 'row'; var head = document.createElement('div'); head.className = 'row-head'; var a = document.createElement('span'); a.textContent = s.name; var b = document.createElement('span'); b.textContent = T.subj[s.id] + ' ч'; head.appendChild(a); head.appendChild(b); var bar = document.createElement('div'); bar.className = 'bar'; var i = document.createElement('i'); i.style.width = (T.subj[s.id] / max * 100) + '%'; bar.appendChild(i); li.appendChild(head); li.appendChild(bar); ul.appendChild(li); }); }
+  function renderLeaders(){ var ol = $('#leaders'); ol.textContent = ''; var arr = votes.filter(function(v){ return num(v.count) > 0; }).sort(function(a, b){ return num(b.count) - num(a.count); }).slice(0, 6); if (!arr.length){ var p = document.createElement('p'); p.className = 'empty'; p.textContent = 'Здесь появятся самые щедрые на часы.'; ol.appendChild(p); return; } arr.forEach(function(v, i){ var li = document.createElement('li'); li.className = 'leader'; var r = document.createElement('span'); r.className = 'rank'; r.textContent = (i + 1); var n = document.createElement('span'); n.className = 'nm'; n.textContent = clean(v.name) || 'Аноним'; var c = document.createElement('span'); c.className = 'n'; c.textContent = num(v.count) + ' ч'; li.appendChild(r); li.appendChild(n); li.appendChild(c); ol.appendChild(li); }); }
+  function renderFeed(){ var ul = $('#feed'); ul.textContent = ''; var arr = votes.filter(function(v){ return v.last && num(v.last.at, 1e15) > 0 && SUBJ[v.last.subject]; }).sort(function(a, b){ return num(b.last.at, 1e15) - num(a.last.at, 1e15); }).slice(0, 8); if (!arr.length){ var p = document.createElement('p'); p.className = 'empty'; p.textContent = 'Лента пока пустая. Новые голоса появятся тут сами.'; ul.appendChild(p); return; } arr.forEach(function(v){ var li = document.createElement('li'); var line = document.createElement('div'); var n = document.createElement('span'); n.className = 'nm'; n.textContent = clean(v.name) || 'Аноним'; line.appendChild(n); line.appendChild(document.createTextNode(' отдал(а) час на «' + SUBJ[v.last.subject] + '»')); var t = document.createElement('time'); t.textContent = ago(num(v.last.at, 1e15)); li.appendChild(line); li.appendChild(t); ul.appendChild(li); }); }
+  function renderTip(){ $('#tipText').textContent = TIPS[tipIdx % TIPS.length]; }
+  function renderAll(){ renderStatus(); renderVoteForm(); renderChips(); renderStats(); renderSubjects(); renderLeaders(); renderFeed(); renderTip(); }
+
+  async function flush(){ if (flushing || !db) return; flushing = true; try { while (dirty){ dirty = false; await setDoc(doc(db, 'votes', uid), { name: clean(mine.name), count: num(mine.count, 100000), subjects: mine.subjects || {}, today: mine.today, last: mine.last || null, updatedAt: Date.now() }); } } catch(e){ dirty = false; toast('Не удалось сохранить голос.'); renderAll(); } flushing = false; }
+
+  async function vote(){
+    if (!db || !loaded) return;
+    var day = dayKey();
+    var t = mine.today && mine.today.day === day ? num(mine.today.n, 1000) : 0;
+    if (t >= 24){ toast('Сегодня уже 24 голоса. В сутках больше часов нет.'); return; }
+    var subs = JSON.parse(JSON.stringify(mine.subjects || {}));
+    subs[selected] = num(subs[selected], 100000) + 1;
+    mine = { name: clean($('#nick').value) || 'Аноним', count: num(mine.count, 100000) + 1, subjects: subs, today: {day: day, n: t + 1}, last: {subject: selected, at: Date.now()} };
+    localStorage.setItem('gzc-name', clean($('#nick').value));
+    var i = -1; votes.forEach(function(v, k){ if (v.id === uid) i = k; });
+    var mv = Object.assign({id: uid}, mine);
+    if (i >= 0) votes[i] = mv; else votes.push(mv);
+    tipIdx = Math.floor(Math.random() * TIPS.length);
+    confetti(); renderAll();
+    dirty = true; flush();
+    toast('+1 час: ' + SUBJ[selected] + '. Спасибо!');
+  }
+
+  async function init(){
+    onSnapshot(doc(db, 'progress', 'main'), (snap) => {
+      if (snap.exists()) { state = snap.data(); renderStats(); }
+    });
+
+    onSnapshot(collection(db, 'votes'), (snap) => {
+      votes = snap.docs.map(d => Object.assign({id: d.id}, d.data()));
+      var me = votes.filter(v => v.id === uid)[0];
+      if (me && !flushing && !dirty) mine = JSON.parse(JSON.stringify(me));
+      loaded = true; live = true;
+      renderAll();
+    });
+
+    $('#voteForm').addEventListener('submit', (e) => { e.preventDefault(); vote(); });
+    $('#nick').value = localStorage.getItem('gzc-name') || '';
+    $('#nick').addEventListener('change', function(){ localStorage.setItem('gzc-name', clean(this.value)); });
+    $('#tipBtn').addEventListener('click', function(){ tipIdx = (tipIdx + 1) % TIPS.length; renderTip(); });
+  }
+
+  init();
+</script>
+
+</body>
+</html>
